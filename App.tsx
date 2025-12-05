@@ -426,12 +426,23 @@ function App() {
            <div className="w-full">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">About Us</h2>
               <div className="w-12 h-1 bg-brand mb-4"></div>
-              <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                Founded with a passion for holistic wellness, Green Leaf Herbals bridges the gap between ancient wisdom and modern lifestyle. We promise 100% organic, ethically sourced ingredients in every jar.
-              </p>
-              <button className="text-brand font-bold text-sm hover:underline flex items-center">
-                Read Our Story <ArrowRight size={16} className="ml-1" />
-              </button>
+              <div className="text-gray-600 text-sm mb-4 leading-relaxed space-y-4">
+                <p>
+                  Green Leaf Herbals is a dedicated herbal products e-commerce platform committed to bringing the purity of nature straight to you. As a new and trusted e-commerce brand under Metric Flux Solutions Pvt. Ltd., we focus on delivering only the highest-quality, 100% verified and trusted herbal products from reputable and certified companies.
+                </p>
+                <p>
+                  Our mission is simple — to make authentic herbal wellness accessible, reliable, and convenient for everyone. In an industry where trust matters the most, we ensure every product listed on our platform undergoes strict verification and quality checks before it reaches our customers.
+                </p>
+                <p>
+                  At Green Leaf Herbals, we believe in transparency, purity, and customer trust. We are continuously working to build a platform where clients can shop with confidence, knowing that every product they choose is genuine, safe, and sourced responsibly.
+                </p>
+                <p>
+                  We aim to create a seamless shopping experience backed by dependable service, timely delivery, and unwavering commitment to customer satisfaction. With Green Leaf Herbals, your journey towards natural wellness is in safe hands.
+                </p>
+                <p className="font-bold text-brand mt-4">
+                  Green Leaf Herbals — Pure. Trusted. Verified.
+                </p>
+              </div>
            </div>
         </div>
       </section>
