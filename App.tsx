@@ -28,7 +28,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const [categories, setCategories] = useState<string[]>(['All', 'Skincare', 'Pain Relief', 'Haircare', 'Weightloss', 'Other']);
-  const [bannerImage, setBannerImage] = useState('https://images.unsplash.com/photo-1623855244183-52fd8d3ce2f7?q=80&w=2000&auto=format&fit=crop');
+  const [bannerImage, setBannerImage] = useState('https://res.cloudinary.com/dufnwlqeq/image/upload/v1764963752/01-01-2026_20251206_010808_0000_g5nf03.png');
   const [orders, setOrders] = useState<Order[]>([
     { id: 'ORD-001', customerName: 'John Smith', total: 4999, status: 'Delivered', date: '2023-10-01', items: [] },
     { id: 'ORD-002', customerName: 'Sarah Johnson', total: 1299, status: 'Processing', date: '2023-10-05', items: [] },
