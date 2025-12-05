@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import ProductCard from './components/ProductCard';
 import ProductDetail from './components/ProductDetail';
-import AIChat from './components/AIChat';
 import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
 import { PRODUCTS } from './constants';
@@ -635,9 +634,6 @@ function App() {
         </div>
       </nav>
       )}
-
-      {/* Only show Chat for non-admin users */}
-      {(!user || user.role === 'user') && <AIChat />}
     </div>
   );
 }
