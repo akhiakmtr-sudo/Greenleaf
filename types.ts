@@ -52,6 +52,11 @@ export interface User {
   name: string;
   email: string;
   role: 'admin' | 'user';
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
 }
 
 export interface Order {

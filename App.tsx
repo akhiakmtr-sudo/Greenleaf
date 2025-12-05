@@ -17,7 +17,9 @@ import {
   LayoutDashboard,
   MapPin,
   Mail,
-  Phone
+  Phone,
+  Package,
+  Save
 } from 'lucide-react';
 import ProductCard from './components/ProductCard';
 import ProductDetail from './components/ProductDetail';
@@ -26,6 +28,150 @@ import AdminDashboard from './components/AdminDashboard';
 import { PRODUCTS } from './constants';
 import { Product, ProductCategory, CartItem, User, Order } from './types';
 
+// -- Sub-Components for User Profile Views --
+
+const AddressView = ({ user, onSave, onBack }: { user: User, onSave: (u: User) => void, onBack: () => void }) => {
+  const [formData, setFormData] = useState({
+    phone: user.phone || '',
+    address: user.address || '',
+    city: user.city || '',
+    state: user.state || '',
+    zip: user.zip || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({ ...user, ...formData });
+  };
+
+  return (
+    <div className="px-4 py-6 max-w-xl mx-auto mb-20">
+      <div className="flex items-center mb-6">
+        <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800 md:hidden">
+          <ArrowRight className="rotate-180" size={24} />
+        </button>
+        <h2 className="text-2xl font-bold text-gray-800">My Address</h2>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Phone Number</label>
+          <input 
+            type="tel" 
+            value={formData.phone}
+            onChange={e => setFormData({...formData, phone: e.target.value})}
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+            placeholder="+91 9876543210"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Street Address</label>
+          <textarea 
+            value={formData.address}
+            onChange={e => setFormData({...formData, address: e.target.value})}
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+            rows={3}
+            placeholder="House No, Street, Landmark"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+           <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">City</label>
+            <input 
+              type="text" 
+              value={formData.city}
+              onChange={e => setFormData({...formData, city: e.target.value})}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+            />
+           </div>
+           <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Pincode</label>
+            <input 
+              type="text" 
+              value={formData.zip}
+              onChange={e => setFormData({...formData, zip: e.target.value})}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+            />
+           </div>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">State</label>
+          <input 
+            type="text" 
+            value={formData.state}
+            onChange={e => setFormData({...formData, state: e.target.value})}
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+          />
+        </div>
+        <button type="submit" className="w-full bg-brand text-white font-bold py-3 rounded-xl mt-4 hover:bg-green-600 transition-colors flex items-center justify-center">
+          <Save size={18} className="mr-2" /> Save Address
+        </button>
+      </form>
+    </div>
+  );
+};
+
+const OrdersView = ({ orders, onBack, onStartShopping }: { orders: Order[], onBack: () => void, onStartShopping: () => void }) => {
+  return (
+    <div className="px-4 py-6 max-w-3xl mx-auto mb-20">
+      <div className="flex items-center mb-6">
+        <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800 md:hidden">
+          <ArrowRight className="rotate-180" size={24} />
+        </button>
+        <h2 className="text-2xl font-bold text-gray-800">My Orders</h2>
+      </div>
+
+      {orders.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+           <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+           <p className="text-gray-500">No orders found.</p>
+           <button onClick={onStartShopping} className="text-brand font-semibold mt-2 hover:underline">Start Shopping</button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map(order => (
+            <div key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+               <div className="flex justify-between items-start mb-4 border-b border-gray-50 pb-3">
+                 <div>
+                   <span className="text-xs font-bold text-gray-500 block">ORDER ID</span>
+                   <span className="font-mono text-sm font-semibold">{order.id}</span>
+                 </div>
+                 <div className="text-right">
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                      order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
+                      order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {order.status}
+                    </span>
+                    <span className="text-xs text-gray-400 block mt-1">{order.date}</span>
+                 </div>
+               </div>
+               <div className="space-y-2 mb-4">
+                 {order.items.map((item, idx) => (
+                   <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-gray-600 flex items-center">
+                         <span className="font-bold text-xs bg-gray-100 px-1.5 py-0.5 rounded mr-2">{item.quantity}x</span> 
+                         {item.name}
+                      </span>
+                      <span className="font-medium">₹{item.price * item.quantity}</span>
+                   </div>
+                 ))}
+               </div>
+               <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                  <span className="text-sm font-bold text-gray-600">Total Amount</span>
+                  <span className="text-lg font-bold text-brand">₹{order.total}</span>
+               </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// -- Main App Component --
+
 function App() {
   // Global State
   const [user, setUser] = useState<User | null>(null);
@@ -33,14 +179,17 @@ function App() {
   const [categories, setCategories] = useState<string[]>(['All', 'Skincare', 'Pain Relief', 'Haircare', 'Weightloss', 'Other']);
   const [bannerImage, setBannerImage] = useState('https://res.cloudinary.com/dufnwlqeq/image/upload/v1764963752/01-01-2026_20251206_010808_0000_g5nf03.png');
   const [orders, setOrders] = useState<Order[]>([
-    { id: 'ORD-001', customerName: 'John Smith', total: 4999, status: 'Delivered', date: '2023-10-01', items: [] },
+    { id: 'ORD-001', customerName: 'Jane Doe', total: 4999, status: 'Delivered', date: '2023-10-01', items: [
+       { ...PRODUCTS[0], quantity: 1, image: PRODUCTS[0].images[0] },
+       { ...PRODUCTS[3], quantity: 2, image: PRODUCTS[3].images[0] }
+    ] },
     { id: 'ORD-002', customerName: 'Sarah Johnson', total: 1299, status: 'Processing', date: '2023-10-05', items: [] },
   ]);
 
   // Shopping State
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [currentView, setCurrentView] = useState<'home' | 'shop' | 'product-detail' | 'cart' | 'auth' | 'admin'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'shop' | 'product-detail' | 'cart' | 'auth' | 'admin' | 'orders' | 'address'>('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -155,6 +304,12 @@ function App() {
     setSelectedProduct(product);
     setCurrentView('product-detail');
     window.scrollTo(0,0);
+  };
+
+  const handleSaveAddress = (updatedUser: User) => {
+    setUser(updatedUser);
+    alert('Address saved successfully!');
+    setCurrentView('home'); // or keep on address page
   };
 
   // --- Derived State ---
@@ -527,26 +682,41 @@ function App() {
                 {user && showProfileMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowProfileMenu(false)}></div>
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-1 border border-gray-100 z-20 animate-in fade-in zoom-in duration-200">
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg py-1 border border-gray-100 z-20 animate-in fade-in zoom-in duration-200">
                       <div className="px-4 py-3 border-b border-gray-50">
                         <p className="text-sm font-bold text-gray-800">{user.name}</p>
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
                       
-                      {user.role === 'admin' && (
+                      {user.role === 'admin' ? (
                         <button
                           onClick={() => { setCurrentView('admin'); setShowProfileMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                         >
-                          <LayoutDashboard size={16} className="mr-2"/> Dashboard
+                          <LayoutDashboard size={16} className="mr-3 text-gray-400"/> Dashboard
                         </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => { setCurrentView('orders'); setShowProfileMenu(false); }}
+                            className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center border-b border-gray-50"
+                          >
+                            <Package size={16} className="mr-3 text-gray-400"/> My Orders
+                          </button>
+                          <button
+                            onClick={() => { setCurrentView('address'); setShowProfileMenu(false); }}
+                            className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center border-b border-gray-50"
+                          >
+                            <MapPin size={16} className="mr-3 text-gray-400"/> Saved Address
+                          </button>
+                        </>
                       )}
                       
                       <button
                         onClick={() => { handleLogout(); }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center"
                       >
-                        <LogOut size={16} className="mr-2"/> Logout
+                        <LogOut size={16} className="mr-3"/> Logout
                       </button>
                     </div>
                   </>
@@ -585,6 +755,20 @@ function App() {
         {currentView === 'home' && renderHome()}
         {currentView === 'shop' && renderShop()}
         {currentView === 'cart' && renderCart()}
+        {currentView === 'orders' && user && (
+          <OrdersView 
+            orders={orders.filter(o => o.customerName === user.name)} 
+            onBack={() => setCurrentView('home')} 
+            onStartShopping={() => setCurrentView('shop')}
+          />
+        )}
+        {currentView === 'address' && user && (
+          <AddressView 
+            user={user} 
+            onSave={handleSaveAddress} 
+            onBack={() => setCurrentView('home')} 
+          />
+        )}
       </main>
 
       {/* Floating WhatsApp Button */}
