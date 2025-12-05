@@ -52,7 +52,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     name: '',
     price: 0,
     category: '',
-    image: '',
+    images: [''],
     description: ''
   });
 
@@ -69,7 +69,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       } as Product);
     }
     setIsEditingProduct(null);
-    setProductForm({ name: '', price: 0, category: categories[0], image: '', description: '' });
+    setProductForm({ name: '', price: 0, category: categories[0], images: [''], description: '' });
   };
 
   const startEdit = (product: Product) => {
@@ -79,7 +79,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const cancelEdit = () => {
     setIsEditingProduct(null);
-    setProductForm({ name: '', price: 0, category: categories[0], image: '', description: '' });
+    setProductForm({ name: '', price: 0, category: categories[0], images: [''], description: '' });
   };
 
   return (
@@ -141,7 +141,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button 
                  onClick={() => {
                    setIsEditingProduct(null);
-                   setProductForm({ name: '', price: 0, category: categories[0] || '', image: '', description: '' });
+                   setProductForm({ name: '', price: 0, category: categories[0] || '', images: [''], description: '' });
                    const formElement = document.getElementById('product-form');
                    if (formElement) formElement.scrollIntoView({ behavior: 'smooth' });
                  }}
@@ -184,8 +184,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <input 
                   type="text" 
                   placeholder="Image URL" 
-                  value={productForm.image} 
-                  onChange={e => setProductForm({...productForm, image: e.target.value})}
+                  value={productForm.images?.[0] || ''} 
+                  onChange={e => setProductForm({...productForm, images: [e.target.value]})}
                   className="p-2 border rounded-lg"
                   required
                 />
@@ -224,7 +224,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   {products.map(product => (
                     <tr key={product.id} className="hover:bg-gray-50">
                       <td className="p-4 flex items-center space-x-3">
-                        <img src={product.image} alt={product.name} className="w-10 h-10 rounded object-cover" />
+                        <img src={product.images[0]} alt={product.name} className="w-10 h-10 rounded object-cover" />
                         <span className="font-medium text-gray-800">{product.name}</span>
                       </td>
                       <td className="p-4 text-gray-600">{product.category}</td>

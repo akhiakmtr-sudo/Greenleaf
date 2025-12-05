@@ -507,21 +507,19 @@ function App() {
             </div>
           </div>
           
-          {currentView !== 'auth' && (
-             <div className="relative">
-               <input
-                 type="text"
-                 placeholder="Search for herbs, teas..."
-                 value={searchQuery}
-                 onChange={(e) => {
-                   setSearchQuery(e.target.value);
-                   if (e.target.value && currentView !== 'shop') setCurrentView('shop');
-                 }}
-                 className="w-full bg-gray-100 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand focus:bg-white transition-all"
-               />
-               <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-             </div>
-          )}
+          <div className="relative">
+             <input
+               type="text"
+               placeholder="Search for herbs, teas..."
+               value={searchQuery}
+               onChange={(e) => {
+                 setSearchQuery(e.target.value);
+                 if (e.target.value && currentView !== 'shop') setCurrentView('shop');
+               }}
+               className="w-full bg-gray-100 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand focus:bg-white transition-all"
+             />
+             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+          </div>
         </div>
       </header>
 
@@ -533,7 +531,7 @@ function App() {
       </main>
 
       {/* Footer */}
-      {currentView !== 'product-detail' && currentView !== 'auth' && (
+      {currentView !== 'product-detail' && (
       <footer className="bg-gray-800 text-gray-300 py-12 px-4 mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
@@ -586,7 +584,7 @@ function App() {
       )}
 
       {/* Mobile Bottom Navigation */}
-      {currentView !== 'product-detail' && currentView !== 'auth' && (
+      {currentView !== 'product-detail' && (
       <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-30 md:hidden pb-safe">
         <div className="flex justify-around items-center h-16">
           <button 
@@ -639,7 +637,7 @@ function App() {
       )}
 
       {/* Only show Chat for non-admin users */}
-      {(!user || user.role === 'user') && currentView !== 'auth' && <AIChat />}
+      {(!user || user.role === 'user') && <AIChat />}
     </div>
   );
 }
