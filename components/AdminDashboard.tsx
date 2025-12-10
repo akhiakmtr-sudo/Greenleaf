@@ -9,7 +9,8 @@ import {
   Edit2, 
   CheckCircle, 
   XCircle,
-  LogOut
+  LogOut,
+  Loader2
 } from 'lucide-react';
 import { Product, Order } from '../types';
 
@@ -46,6 +47,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isEditingProduct, setIsEditingProduct] = useState<Product | null>(null);
   const [newCategory, setNewCategory] = useState('');
   const [tempBannerUrl, setTempBannerUrl] = useState(bannerImage);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form State for Product
   const [productForm, setProductForm] = useState<Partial<Product>>({
@@ -56,8 +58,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     description: ''
   });
 
-  const handleProductSubmit = (e: React.FormEvent) => {
+  const switchTab = async (tab: typeof activeTab) => {
+    if (tab === activeTab) return;
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 600)); // Simulate data fetch
+    setActiveTab(tab);
+    setIsLoading(false);
+  };
+
+  const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
     if (isEditingProduct) {
       onUpdateProduct({ ...isEditingProduct, ...productForm } as Product);
     } else {
@@ -70,11 +82,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
     setIsEditingProduct(null);
     setProductForm({ name: '', price: 0, category: categories[0], images: [''], description: '' });
+    setIsLoading(false);
   };
 
   const startEdit = (product: Product) => {
-    setIsEditingProduct(product);
-    setProductForm(product);
+    setIsLoading(true);
+    setTimeout(() => {
+        setIsEditingProduct(product);
+        setProductForm(product);
+        setIsLoading(false);
+    }, 300);
   };
 
   const cancelEdit = () => {
@@ -91,28 +108,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
         <nav className="flex-grow p-4 space-y-2">
           <button 
-            onClick={() => setActiveTab('products')}
+            onClick={() => switchTab('products')}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'products' ? 'bg-green-50 text-brand font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Package size={20} />
             <span>Products</span>
           </button>
           <button 
-            onClick={() => setActiveTab('orders')}
+            onClick={() => switchTab('orders')}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'orders' ? 'bg-green-50 text-brand font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <ShoppingCart size={20} />
             <span>Orders</span>
           </button>
           <button 
-            onClick={() => setActiveTab('banner')}
+            onClick={() => switchTab('banner')}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'banner' ? 'bg-green-50 text-brand font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Image size={20} />
             <span>Ads & Banner</span>
           </button>
           <button 
-            onClick={() => setActiveTab('categories')}
+            onClick={() => switchTab('categories')}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'categories' ? 'bg-green-50 text-brand font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <List size={20} />
@@ -131,11 +148,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-64 p-8">
+      <div className="flex-1 md:ml-64 p-8 relative min-h-screen">
         
+        {isLoading && (
+            <div className="absolute inset-0 bg-white/80 z-20 flex items-center justify-center backdrop-blur-sm">
+                <Loader2 size={40} className="text-brand animate-spin" />
+            </div>
+        )}
+
         {/* Products Management */}
         {activeTab === 'products' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
               <button 
@@ -249,7 +272,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Orders Management */}
         {activeTab === 'orders' && (
-           <div className="space-y-6">
+           <div className="space-y-6 animate-in fade-in duration-300">
              <h1 className="text-2xl font-bold text-gray-800">Order Management</h1>
              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <table className="w-full text-left text-sm">
@@ -296,7 +319,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Banner Management */}
         {activeTab === 'banner' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
             <h1 className="text-2xl font-bold text-gray-800">Ads & Banner Management</h1>
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-w-2xl">
                <div className="mb-4">
@@ -326,7 +349,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Category Management */}
         {activeTab === 'categories' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
              <h1 className="text-2xl font-bold text-gray-800">Category Management</h1>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -340,10 +363,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                      placeholder="New Category Name"
                    />
                    <button 
-                     onClick={() => {
+                     onClick={async () => {
                         if (newCategory) {
+                          setIsLoading(true);
+                          await new Promise(resolve => setTimeout(resolve, 500));
                           onAddCategory(newCategory);
                           setNewCategory('');
+                          setIsLoading(false);
                         }
                      }}
                      className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-green-600"

@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
-import { Mail, Lock, User as UserIcon, ArrowLeft, Eye, EyeOff, KeyRound, ChevronLeft } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, ArrowLeft, Eye, EyeOff, KeyRound, ChevronLeft, Loader2 } from 'lucide-react';
 
 interface AuthProps {
   onLogin: (user: User) => void;
@@ -14,6 +13,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
   const [view, setView] = useState<AuthView>('login');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading] = useState(false);
   
   // Form States
   const [email, setEmail] = useState('');
@@ -47,8 +47,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
 
   // --- Handlers ---
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setLoading(false);
+
     if (email === 'admin@greenleaf.com' && password === 'admin123') {
       onLogin({ id: 'admin-1', name: 'Admin User', email, role: 'admin' });
     } else if (email === 'user@greenleaf.com' && password === 'user123') {
@@ -66,12 +70,16 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
     }
   };
 
-  const initiateSignup = (e: React.FormEvent) => {
+  const initiateSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) {
       setError('Please fill in all fields');
       return;
     }
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setLoading(false);
+
     // Store data temporarily
     setTempUserData({ name, email, role: 'user' });
     // Send OTP
@@ -79,8 +87,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
     setView('otp-signup');
   };
 
-  const verifySignupOtp = (e: React.FormEvent) => {
+  const verifySignupOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setLoading(false);
+
     if (otpInput === generatedOtp) {
       // Success: Create User
       onLogin({
@@ -95,18 +107,26 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
     }
   };
 
-  const initiateForgotPassword = (e: React.FormEvent) => {
+  const initiateForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address');
       return;
     }
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setLoading(false);
+
     generateAndSendOTP(email);
     setView('otp-reset');
   };
 
-  const verifyResetOtp = (e: React.FormEvent) => {
+  const verifyResetOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setLoading(false);
+
     if (otpInput === generatedOtp) {
       setView('new-password');
     } else {
@@ -114,7 +134,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
     }
   };
 
-  const handlePasswordReset = (e: React.FormEvent) => {
+  const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
@@ -124,6 +144,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
       setError('Passwords do not match');
       return;
     }
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setLoading(false);
+
     // Logic to update password in backend would go here
     setSuccessMsg('Password reset successfully! Please login.');
     setTimeout(() => {
@@ -165,6 +189,16 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
         </button>
       )}
     </div>
+  );
+
+  const SubmitButton = ({ text }: { text: string }) => (
+    <button 
+      type="submit" 
+      disabled={loading}
+      className="w-full bg-brand text-white font-bold py-3 rounded-xl hover:bg-green-600 transition-all shadow-lg shadow-green-100 active:scale-95 mt-2 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+    >
+      {loading ? <Loader2 size={20} className="animate-spin" /> : text}
+    </button>
   );
 
   // --- Views ---
@@ -242,9 +276,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
               </button>
             </div>
 
-            <button type="submit" className="w-full bg-brand text-white font-bold py-3 rounded-xl hover:bg-green-600 transition-all shadow-lg shadow-green-100 active:scale-95 mt-2">
-              Login
-            </button>
+            <SubmitButton text="Login" />
 
             <div className="mt-6 text-center text-sm text-gray-600">
               Don't have an account? 
@@ -267,9 +299,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
             {renderInput(<Mail size={18}/>, "email", "Email Address", email, setEmail)}
             {renderInput(<Lock size={18}/>, "password", "Create Password", password, setPassword, true)}
 
-            <button type="submit" className="w-full bg-brand text-white font-bold py-3 rounded-xl hover:bg-green-600 transition-all shadow-lg shadow-green-100 active:scale-95 mt-2">
-              Sign Up
-            </button>
+            <SubmitButton text="Sign Up" />
 
             <div className="mt-6 text-center text-sm text-gray-600">
               Already have an account? 
@@ -285,9 +315,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
           <form onSubmit={initiateForgotPassword} className="space-y-4">
             {renderInput(<Mail size={18}/>, "email", "Enter your registered email", email, setEmail)}
 
-            <button type="submit" className="w-full bg-brand text-white font-bold py-3 rounded-xl hover:bg-green-600 transition-all shadow-lg shadow-green-100 active:scale-95 mt-2">
-              Send OTP
-            </button>
+            <SubmitButton text="Send OTP" />
 
             <button type="button" onClick={() => setView('login')} className="w-full text-gray-500 text-sm py-2 hover:text-gray-800">
               Cancel
@@ -321,9 +349,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
               </button>
             </p>
 
-            <button type="submit" className="w-full bg-brand text-white font-bold py-3 rounded-xl hover:bg-green-600 transition-all shadow-lg shadow-green-100 active:scale-95">
-              Verify OTP
-            </button>
+            <SubmitButton text="Verify OTP" />
           </form>
         )}
 
@@ -333,9 +359,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
             {renderInput(<Lock size={18}/>, "password", "New Password", password, setPassword, true)}
             {renderInput(<KeyRound size={18}/>, "password", "Confirm Password", confirmPassword, setConfirmPassword, true)}
 
-            <button type="submit" className="w-full bg-brand text-white font-bold py-3 rounded-xl hover:bg-green-600 transition-all shadow-lg shadow-green-100 active:scale-95 mt-2">
-              Update Password
-            </button>
+            <SubmitButton text="Update Password" />
           </form>
         )}
 

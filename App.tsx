@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ShoppingBag, 
   User as UserIcon, 
@@ -19,7 +19,12 @@ import {
   Mail,
   Phone,
   Package,
-  Save
+  Save,
+  Calendar,
+  Building2,
+  Stethoscope,
+  Loader2,
+  CheckCircle
 } from 'lucide-react';
 import ProductCard from './components/ProductCard';
 import ProductDetail from './components/ProductDetail';
@@ -28,7 +33,149 @@ import AdminDashboard from './components/AdminDashboard';
 import { PRODUCTS } from './constants';
 import { Product, ProductCategory, CartItem, User, Order } from './types';
 
+// -- Loading Component --
+const LoadingOverlay = () => (
+  <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="relative">
+       <div className="absolute inset-0 bg-brand/20 rounded-full blur-xl animate-pulse"></div>
+       <Loader2 size={48} className="text-brand animate-spin relative z-10" />
+    </div>
+    <p className="text-gray-500 font-medium animate-pulse text-sm mt-4 tracking-wide">Processing...</p>
+  </div>
+);
+
 // -- Sub-Components for User Profile Views --
+
+const OrderConfirmationView = ({ 
+  user, 
+  cart, 
+  total, 
+  onBack, 
+  onPayNow 
+}: { 
+  user: User, 
+  cart: CartItem[], 
+  total: number, 
+  onBack: () => void, 
+  onPayNow: (details: any) => void 
+}) => {
+  const [formData, setFormData] = useState({
+    name: user.name || '',
+    email: user.email || '',
+    phone: user.phone || '',
+    address: user.address || '',
+    city: user.city || '',
+    state: user.state || '',
+    zip: user.zip || ''
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onPayNow(formData);
+  };
+
+  return (
+    <div className="px-4 py-6 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 mb-20">
+      <div className="flex items-center mb-6">
+        <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800">
+          <ArrowRight className="rotate-180" size={24} />
+        </button>
+        <h2 className="text-2xl font-bold text-gray-800">Order Confirmation</h2>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="md:col-span-2">
+            <form id="order-form" onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                <h3 className="font-bold text-gray-800 mb-2 border-b pb-2">Shipping Details</h3>
+                <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Full Name</label>
+                    <input name="name" value={formData.name} onChange={handleChange} required className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Mobile Number</label>
+                        <input name="phone" value={formData.phone} onChange={handleChange} required className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Email ID</label>
+                        <input name="email" value={formData.email} onChange={handleChange} required className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none" />
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Full Address</label>
+                    <textarea name="address" value={formData.address} onChange={handleChange} required rows={3} className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none" />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Pincode</label>
+                        <input name="zip" value={formData.zip} onChange={handleChange} required className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">District</label>
+                        <input name="city" value={formData.city} onChange={handleChange} required className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none" />
+                    </div>
+                     <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">State</label>
+                        <input name="state" value={formData.state} onChange={handleChange} required className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none" />
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div className="md:col-span-2">
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <h3 className="font-bold text-gray-800 mb-4">Order Summary</h3>
+                <div className="space-y-2 mb-4 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {cart.map(item => (
+                        <div key={item.id} className="flex justify-between text-sm">
+                            <span className="text-gray-600 flex-1 truncate mr-4">{item.name} <span className="text-gray-400">x{item.quantity}</span></span>
+                            <span className="font-medium">₹{item.price * item.quantity}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+                    <span className="font-bold text-lg">Total to Pay</span>
+                    <span className="font-bold text-xl text-brand">₹{total}</span>
+                </div>
+                
+                <button 
+                    form="order-form"
+                    type="submit"
+                    className="w-full bg-brand text-white font-bold py-4 rounded-xl mt-6 hover:bg-green-600 shadow-lg shadow-green-100 transition-all active:scale-95"
+                >
+                    Pay Now
+                </button>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PaymentView = ({ total, onBack, onComplete }: { total: number, onBack: () => void, onComplete: () => void }) => (
+    <div className="px-4 py-12 max-w-lg mx-auto text-center animate-in zoom-in duration-300">
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-brand">
+            <CheckCircle size={40} />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Payment Gateway</h2>
+        <p className="text-gray-600 mb-8">
+            You are about to pay <span className="font-bold text-gray-900">₹{total}</span>
+        </p>
+        <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-xl mb-8">
+            <p className="text-yellow-800 text-sm font-medium">Payment integration pending...</p>
+        </div>
+        <button onClick={onComplete} className="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-black transition-all mb-4">
+             Complete Payment (Demo)
+        </button>
+        <button onClick={onBack} className="text-brand font-bold hover:underline text-sm">
+            Cancel & Go Back
+        </button>
+    </div>
+);
 
 const AddressView = ({ user, onSave, onBack }: { user: User, onSave: (u: User) => void, onBack: () => void }) => {
   const [formData, setFormData] = useState({
@@ -45,7 +192,7 @@ const AddressView = ({ user, onSave, onBack }: { user: User, onSave: (u: User) =
   };
 
   return (
-    <div className="px-4 py-6 max-w-xl mx-auto mb-20">
+    <div className="px-4 py-6 max-w-xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center mb-6">
         <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800 md:hidden">
           <ArrowRight className="rotate-180" size={24} />
@@ -113,7 +260,7 @@ const AddressView = ({ user, onSave, onBack }: { user: User, onSave: (u: User) =
 
 const OrdersView = ({ orders, onBack, onStartShopping }: { orders: Order[], onBack: () => void, onStartShopping: () => void }) => {
   return (
-    <div className="px-4 py-6 max-w-3xl mx-auto mb-20">
+    <div className="px-4 py-6 max-w-3xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center mb-6">
         <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800 md:hidden">
           <ArrowRight className="rotate-180" size={24} />
@@ -170,10 +317,155 @@ const OrdersView = ({ orders, onBack, onStartShopping }: { orders: Order[], onBa
   );
 };
 
+const HospitalsView = ({ onBack }: { onBack: () => void }) => {
+  const hospitals = [
+    { id: 1, name: "Green Leaf Ayurvedic Centre", location: "Kannur, Kerala", phone: "+91 9876543210", image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600" },
+    { id: 2, name: "Nature's Care Hospital", location: "Kochi, Kerala", phone: "+91 9876543211", image: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=600" },
+    { id: 3, name: "Herbal Life Wellness", location: "Bangalore, Karnataka", phone: "+91 9876543212", image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&q=80&w=600" },
+  ];
+
+  return (
+    <div className="px-4 py-6 max-w-5xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center mb-6">
+        <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800">
+          <ArrowRight className="rotate-180" size={24} />
+        </button>
+        <h2 className="text-2xl font-bold text-gray-800">Partner Hospitals</h2>
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {hospitals.map(h => (
+          <div key={h.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+            <div className="h-48 overflow-hidden">
+               <img src={h.image} alt={h.name} className="w-full h-full object-cover"/>
+            </div>
+            <div className="p-4">
+              <h3 className="font-bold text-lg text-gray-800">{h.name}</h3>
+              <div className="flex items-center text-gray-600 mt-3 text-sm">
+                <MapPin size={16} className="mr-2 text-brand flex-shrink-0"/> <span className="truncate">{h.location}</span>
+              </div>
+              <div className="flex items-center text-gray-600 mt-2 text-sm">
+                <Phone size={16} className="mr-2 text-brand flex-shrink-0"/> <span>{h.phone}</span>
+              </div>
+              <button className="mt-5 w-full border border-brand text-brand font-bold py-2 rounded-lg hover:bg-brand hover:text-white transition-colors">
+                View Details
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const AppointmentView = ({ onBack, user, setIsLoading }: { onBack: () => void, user: User | null, setIsLoading: (loading: boolean) => void }) => {
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    phone: user?.phone || '',
+    date: '',
+    department: 'General Consultation'
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Simulate Network Request
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Generate Booking ID
+    const bookingId = `BK-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+
+    // Prepare Payload
+    const bookingDetails = {
+      bookingId,
+      to: 'info@metricfluxsolutions.com',
+      patientName: formData.name,
+      phone: formData.phone,
+      date: formData.date,
+      department: formData.department,
+      status: 'Pending Confirmation'
+    };
+
+    // Log the "Automatic Send" action to simulate backend process
+    console.log('------------------------------------------------');
+    console.log(`SENDING APPOINTMENT DATA TO: ${bookingDetails.to}`);
+    console.log('PAYLOAD:', bookingDetails);
+    console.log('------------------------------------------------');
+
+    setIsLoading(false);
+
+    // UI Confirmation
+    alert(`Appointment Request Sent Successfully!\n\nBooking ID: ${bookingId}\n\nYour appointment details have been automatically sent to ${bookingDetails.to}.\n\nOur team will contact you shortly to confirm.`);
+    onBack();
+  };
+
+  return (
+    <div className="px-4 py-6 max-w-xl mx-auto mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center mb-6">
+        <button onClick={onBack} className="mr-3 text-gray-500 hover:text-gray-800">
+          <ArrowRight className="rotate-180" size={24} />
+        </button>
+        <h2 className="text-2xl font-bold text-gray-800">Book Appointment</h2>
+      </div>
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Patient Name</label>
+          <input 
+            required
+            type="text" 
+            value={formData.name}
+            onChange={e => setFormData({...formData, name: e.target.value})}
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+            placeholder="Enter Full Name"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Phone Number</label>
+          <input 
+            required
+            type="tel" 
+            value={formData.phone}
+            onChange={e => setFormData({...formData, phone: e.target.value})}
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+            placeholder="+91 9876543210"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Preferred Date</label>
+          <input 
+            required
+            type="date" 
+            value={formData.date}
+            onChange={e => setFormData({...formData, date: e.target.value})}
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Department</label>
+          <select 
+            value={formData.department}
+            onChange={e => setFormData({...formData, department: e.target.value})}
+            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
+          >
+            <option>General Consultation</option>
+            <option>Ayurvedic Therapy</option>
+            <option>Skin Care Specialist</option>
+            <option>Pain Management</option>
+          </select>
+        </div>
+        <button type="submit" className="w-full bg-brand text-white font-bold py-3 rounded-xl mt-4 hover:bg-green-600 transition-colors">
+          Confirm Booking
+        </button>
+      </form>
+    </div>
+  )
+}
+
 // -- Main App Component --
 
 function App() {
   // Global State
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const [categories, setCategories] = useState<string[]>(['All', 'Skincare', 'Pain Relief', 'Haircare', 'Weightloss', 'Other']);
@@ -186,18 +478,71 @@ function App() {
     { id: 'ORD-002', customerName: 'Sarah Johnson', total: 1299, status: 'Processing', date: '2023-10-05', items: [] },
   ]);
 
-  // Shopping State
+  // View State type definition for safety
+  type ViewType = 'home' | 'shop' | 'product-detail' | 'cart' | 'auth' | 'admin' | 'orders' | 'address' | 'appointments' | 'hospitals' | 'order-confirmation' | 'payment';
+  const [currentView, setCurrentView] = useState<ViewType>('home');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [currentView, setCurrentView] = useState<'home' | 'shop' | 'product-detail' | 'cart' | 'auth' | 'admin' | 'orders' | 'address'>('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   // UI State
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // --- Global Loading Wrapper ---
+  // This ensures every view transition has a loading state
+  const navigate = async (view: ViewType) => {
+    if (view === currentView) return;
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 800)); // Simulate page load
+    setCurrentView(view);
+    window.scrollTo(0, 0);
+    setIsLoading(false);
+  };
+
+  // Simulate Initial Load
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // --- Wrapped Actions with Loading ---
+  
+  const handleCategoryChange = async (cat: string) => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 600)); // Simulate fetch
+    setActiveCategory(cat);
+    setIsLoading(false);
+  };
+
+  const handleAddToCartWithLoad = async (product: Product) => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate cart update
+    addToCart(product);
+    setIsLoading(false);
+  };
+
+  const handleAddReviewWithLoad = async (productId: string, rating: number) => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 800)); // Simulate submission
+    handleAddReview(productId, rating);
+    setIsLoading(false);
+  };
+
+  const handleSaveAddressWithLoad = async (updatedUser: User) => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    handleSaveAddress(updatedUser);
+    setIsLoading(false);
+  };
 
   // --- Auth Handlers ---
-  const handleLogin = (loggedInUser: User) => {
+  const handleLogin = async (loggedInUser: User) => {
+    // Transition loader
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     setUser(loggedInUser);
     if (loggedInUser.role === 'admin') {
       setCurrentView('admin');
@@ -209,12 +554,16 @@ function App() {
         setCurrentView('home');
       }
     }
+    setIsLoading(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
     setUser(null);
     setCurrentView('home');
     setShowProfileMenu(false);
+    setIsLoading(false);
   };
 
   // --- Admin Handlers ---
@@ -251,10 +600,10 @@ function App() {
     });
   };
 
-  const handleBuyNow = (product: Product) => {
+  const handleBuyNow = async (product: Product) => {
     if (!user) {
       alert("Please login to purchase products.");
-      setCurrentView('auth');
+      navigate('auth');
       // We keep the selectedProduct set so we can return to it or auto-add later
       setSelectedProduct(product);
       return;
@@ -264,9 +613,9 @@ function App() {
       return;
     }
     
-    // Logic for Buy Now: Add to cart and go to cart (or direct checkout)
-    addToCart(product);
-    setCurrentView('cart');
+    // Add to cart first (so we can use the cart state for checkout)
+    await handleAddToCartWithLoad(product);
+    navigate('order-confirmation');
   };
 
   const removeFromCart = (id: string) => {
@@ -286,7 +635,7 @@ function App() {
   const handleAddReview = (productId: string, rating: number) => {
      if (!user) {
        alert("Please login to add a review.");
-       setCurrentView('auth');
+       navigate('auth');
        return;
      }
      setProducts(prev => prev.map(p => {
@@ -300,16 +649,42 @@ function App() {
      alert("Thanks for your review!");
   };
 
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = async (product: Product) => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
     setSelectedProduct(product);
     setCurrentView('product-detail');
     window.scrollTo(0,0);
+    setIsLoading(false);
   };
 
   const handleSaveAddress = (updatedUser: User) => {
     setUser(updatedUser);
     alert('Address saved successfully!');
     setCurrentView('home'); // or keep on address page
+  };
+
+  const handlePaymentComplete = async () => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Create Order
+    if (user) {
+        const newOrder: Order = {
+            id: `ORD-${Math.floor(Math.random() * 10000)}`,
+            customerName: user.name,
+            total: cartTotal,
+            items: [...cart],
+            status: 'Pending',
+            date: new Date().toISOString().split('T')[0]
+        };
+        setOrders(prev => [newOrder, ...prev]);
+        setCart([]);
+    }
+    
+    setIsLoading(false);
+    alert("Payment Successful! Order Placed.");
+    navigate('home');
   };
 
   // --- Derived State ---
@@ -331,7 +706,7 @@ function App() {
   // --- Render Views ---
 
   if (currentView === 'auth') {
-    return <Auth onLogin={handleLogin} onBack={() => setCurrentView('home')} />;
+    return <Auth onLogin={handleLogin} onBack={() => navigate('home')} />;
   }
 
   if (currentView === 'admin' && user?.role === 'admin') {
@@ -358,21 +733,40 @@ function App() {
       <ProductDetail 
         product={selectedProduct}
         user={user}
-        onBack={() => setCurrentView('shop')}
-        onAddToCart={addToCart}
+        onBack={() => navigate('shop')}
+        onAddToCart={handleAddToCartWithLoad}
         onBuyNow={handleBuyNow}
-        onAddReview={handleAddReview}
+        onAddReview={handleAddReviewWithLoad}
       />
     );
+  }
+
+  if (currentView === 'order-confirmation' && user) {
+    return (
+      <OrderConfirmationView 
+        user={user} 
+        cart={cart} 
+        total={cartTotal} 
+        onBack={() => navigate('cart')} 
+        onPayNow={async (details) => {
+            // Can handle detail saving here if needed
+            navigate('payment');
+        }}
+      />
+    );
+  }
+
+  if (currentView === 'payment') {
+    return <PaymentView total={cartTotal} onBack={() => navigate('cart')} onComplete={handlePaymentComplete} />
   }
 
   const renderHome = () => (
     <>
       {/* Hero Section */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div 
           className="rounded-2xl shadow-sm overflow-hidden cursor-pointer group relative"
-          onClick={() => setCurrentView('shop')}
+          onClick={() => navigate('shop')}
         >
           <img 
             src={bannerImage} 
@@ -384,14 +778,14 @@ function App() {
 
       {/* Value Props */}
       <div className="grid grid-cols-2 gap-4 px-4 mb-8">
-        <div className="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-50">
+        <div className="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-50 animate-in zoom-in duration-500 delay-100">
           <div className="bg-green-50 p-2 rounded-full mb-1 text-green-600">
             <Truck size={20} />
           </div>
           <h3 className="font-bold text-xs text-gray-800">Free Delivery</h3>
           <p className="text-[10px] text-gray-500">On orders above ₹1999</p>
         </div>
-        <div className="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-50">
+        <div className="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center text-center border border-gray-50 animate-in zoom-in duration-500 delay-200">
           <div className="bg-green-50 p-2 rounded-full mb-1 text-green-600">
             <Headphones size={20} />
           </div>
@@ -404,7 +798,7 @@ function App() {
       <div className="px-4 mb-12">
         <div className="flex justify-between items-center mb-4">
            <h2 className="text-xl font-bold text-gray-800">Popular Now</h2>
-           <button onClick={() => setCurrentView('shop')} className="text-brand text-sm font-semibold">View All</button>
+           <button onClick={() => navigate('shop')} className="text-brand text-sm font-semibold">View All</button>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {products.slice(0, 4).map(product => (
@@ -412,7 +806,7 @@ function App() {
               key={product.id} 
               product={product} 
               user={user}
-              onAddToCart={addToCart} 
+              onAddToCart={handleAddToCartWithLoad} 
               onAddReview={handleAddReview}
               onClick={handleProductClick}
             />
@@ -426,7 +820,7 @@ function App() {
            <div className="w-full">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">About Us</h2>
               <div className="w-12 h-1 bg-brand mb-4"></div>
-              <div className="text-gray-600 text-sm mb-4 leading-relaxed space-y-4">
+              <div className="text-gray-600 text-sm mb-4 leading-relaxed space-y-4 text-justify">
                 <p>
                   Green Leaf Herbals is a dedicated herbal products e-commerce platform committed to bringing the purity of nature straight to you. As a new and trusted e-commerce brand under Metric Flux Solutions Pvt. Ltd., we focus on delivering only the highest-quality, 100% verified and trusted herbal products from reputable and certified companies.
                 </p>
@@ -516,13 +910,13 @@ function App() {
   );
 
   const renderShop = () => (
-    <div className="px-4 py-6 mb-24">
+    <div className="px-4 py-6 mb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Categories Scroller */}
       <div className="flex space-x-2 overflow-x-auto no-scrollbar mb-6 pb-2">
         {categories.map(cat => (
           <button
             key={cat}
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => handleCategoryChange(cat)}
             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
               activeCategory === cat 
                 ? 'bg-brand text-white shadow-md' 
@@ -541,7 +935,7 @@ function App() {
             key={product.id} 
             product={product} 
             user={user}
-            onAddToCart={addToCart} 
+            onAddToCart={handleAddToCartWithLoad} 
             onAddReview={handleAddReview}
             onClick={handleProductClick}
           />
@@ -557,7 +951,7 @@ function App() {
   );
 
   const renderCart = () => (
-    <div className="px-4 py-6 mb-24 max-w-2xl mx-auto">
+    <div className="px-4 py-6 mb-24 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Your Bag</h2>
       
       {cart.length === 0 ? (
@@ -565,7 +959,7 @@ function App() {
           <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 mb-4">Your bag is empty.</p>
           <button 
-            onClick={() => setCurrentView('shop')}
+            onClick={() => navigate('shop')}
             className="text-brand font-semibold hover:underline"
           >
             Start Shopping
@@ -625,23 +1019,12 @@ function App() {
             </div>
             {/* Mock Checkout - Book Product */}
             <button 
-              onClick={() => {
+              onClick={async () => {
                 if (!user) {
                   alert("Please login to book products.");
-                  setCurrentView('auth');
+                  navigate('auth');
                 } else {
-                  alert("Order placed successfully! (Demo)");
-                  setCart([]);
-                  // Add to orders list for admin
-                  const newOrder: Order = {
-                    id: `ORD-${Math.floor(Math.random() * 10000)}`,
-                    customerName: user.name,
-                    total: cartTotal,
-                    items: [...cart],
-                    status: 'Pending',
-                    date: new Date().toISOString().split('T')[0]
-                  };
-                  setOrders(prev => [newOrder, ...prev]);
+                  navigate('order-confirmation');
                 }
               }}
               className="w-full bg-brand text-white font-bold py-4 rounded-xl hover:bg-green-600 active:scale-95 transition-all shadow-lg shadow-green-100"
@@ -657,36 +1040,145 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-16 md:pb-0 relative">
       
+      {isLoading && <LoadingOverlay />}
+
+      {/* Side Menu Drawer */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+            onClick={() => setIsMobileMenuOpen(false)}
+          ></div>
+          <div className="relative bg-white w-72 h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-green-50/50">
+               <span className="font-bold text-lg text-brand">Menu</span>
+               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                 <X size={24}/>
+               </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+               {user ? (
+                 <div className="mx-2 mb-6 p-4 bg-green-50 rounded-xl flex items-center space-x-3 border border-green-100">
+                   <div className="bg-white p-2 rounded-full text-brand shadow-sm">
+                     <UserIcon size={20} />
+                   </div>
+                   <div className="overflow-hidden">
+                     <p className="font-bold text-gray-800 truncate">{user.name}</p>
+                     <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                   </div>
+                 </div>
+               ) : (
+                 <div className="mx-2 mb-6">
+                    <button 
+                      onClick={() => { navigate('auth'); setIsMobileMenuOpen(false); }}
+                      className="w-full bg-brand text-white py-3 rounded-xl font-bold hover:bg-green-600 transition-colors shadow-green-100 shadow-lg"
+                    >
+                      Login / Sign Up
+                    </button>
+                 </div>
+               )}
+
+               <button 
+                 onClick={() => { navigate('home'); setIsMobileMenuOpen(false); }} 
+                 className={`w-full text-left px-4 py-3 rounded-lg flex items-center font-medium ${currentView === 'home' ? 'bg-gray-100 text-brand' : 'text-gray-700 hover:bg-gray-50'}`}
+               >
+                 <Home size={20} className="mr-3 opacity-70"/> Home
+               </button>
+
+               <button 
+                 onClick={() => { navigate('shop'); setIsMobileMenuOpen(false); }} 
+                 className={`w-full text-left px-4 py-3 rounded-lg flex items-center font-medium ${currentView === 'shop' ? 'bg-gray-100 text-brand' : 'text-gray-700 hover:bg-gray-50'}`}
+               >
+                 <Store size={20} className="mr-3 opacity-70"/> Shop Products
+               </button>
+
+               <button 
+                 onClick={() => { navigate('appointments'); setIsMobileMenuOpen(false); }} 
+                 className={`w-full text-left px-4 py-3 rounded-lg flex items-center font-medium ${currentView === 'appointments' ? 'bg-gray-100 text-brand' : 'text-gray-700 hover:bg-gray-50'}`}
+               >
+                 <Calendar size={20} className="mr-3 opacity-70"/> Book Appointment
+               </button>
+
+               <button 
+                 onClick={() => { navigate('hospitals'); setIsMobileMenuOpen(false); }} 
+                 className={`w-full text-left px-4 py-3 rounded-lg flex items-center font-medium ${currentView === 'hospitals' ? 'bg-gray-100 text-brand' : 'text-gray-700 hover:bg-gray-50'}`}
+               >
+                 <Building2 size={20} className="mr-3 opacity-70"/> Hospitals
+               </button>
+               
+               {user && (
+                 <>
+                   <div className="my-2 border-t border-gray-100 mx-4"></div>
+                   <button 
+                    onClick={() => { navigate('orders'); setIsMobileMenuOpen(false); }} 
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center font-medium ${currentView === 'orders' ? 'bg-gray-100 text-brand' : 'text-gray-700 hover:bg-gray-50'}`}
+                   >
+                    <Package size={20} className="mr-3 opacity-70"/> My Orders
+                   </button>
+                   <button 
+                    onClick={() => { navigate('address'); setIsMobileMenuOpen(false); }} 
+                    className={`w-full text-left px-4 py-3 rounded-lg flex items-center font-medium ${currentView === 'address' ? 'bg-gray-100 text-brand' : 'text-gray-700 hover:bg-gray-50'}`}
+                   >
+                    <MapPin size={20} className="mr-3 opacity-70"/> Saved Address
+                   </button>
+                 </>
+               )}
+            </div>
+
+            {user && (
+              <div className="p-4 border-t border-gray-100">
+                <button 
+                  onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} 
+                  className="w-full text-left px-4 py-3 rounded-lg flex items-center text-red-600 hover:bg-red-50 font-medium transition-colors"
+                >
+                  <LogOut size={20} className="mr-3"/> Logout
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Sticky Header */}
       <header className="sticky top-0 z-30 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setCurrentView('home')}>
-               {/* Image Logo Only */}
-               <div className="h-8 md:h-10">
-                 <img 
-                   src="https://placehold.co/200x50/ffffff/15803d?text=GREEN+LEAF&font=playfair-display" 
-                   alt="Green Leaf Herbals" 
-                   className="h-full object-contain"
-                 />
+            <div className="flex items-center space-x-3">
+               <button 
+                 onClick={() => setIsMobileMenuOpen(true)}
+                 className="p-1 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+               >
+                 <Menu size={28} />
+               </button>
+
+               <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('home')}>
+                  {/* Image Logo Only */}
+                  <div className="h-8 md:h-10">
+                    <img 
+                      src="https://placehold.co/200x50/ffffff/15803d?text=GREEN+LEAF&font=playfair-display" 
+                      alt="Green Leaf Herbals" 
+                      className="h-full object-contain"
+                    />
+                  </div>
                </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              {/* User Profile Dropdown */}
-              <div className="relative">
+              {/* User Profile Dropdown (Desktop) */}
+              <div className="relative hidden md:block">
                 <button 
                   onClick={() => {
                     if (user) {
                       setShowProfileMenu(!showProfileMenu);
                     } else {
-                      setCurrentView('auth');
+                      navigate('auth');
                     }
                   }}
                   className={`flex items-center space-x-1 ${user ? 'text-brand' : 'text-gray-600 hover:text-brand'}`}
                 >
                   <UserIcon size={24} />
-                  {user && <span className="text-xs font-bold hidden md:inline">{user.name}</span>}
+                  {user && <span className="text-xs font-bold">{user.name}</span>}
                 </button>
 
                 {/* Dropdown Menu */}
@@ -701,7 +1193,7 @@ function App() {
                       
                       {user.role === 'admin' ? (
                         <button
-                          onClick={() => { setCurrentView('admin'); setShowProfileMenu(false); }}
+                          onClick={() => { navigate('admin'); setShowProfileMenu(false); }}
                           className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                         >
                           <LayoutDashboard size={16} className="mr-3 text-gray-400"/> Dashboard
@@ -709,13 +1201,13 @@ function App() {
                       ) : (
                         <>
                           <button
-                            onClick={() => { setCurrentView('orders'); setShowProfileMenu(false); }}
+                            onClick={() => { navigate('orders'); setShowProfileMenu(false); }}
                             className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center border-b border-gray-50"
                           >
                             <Package size={16} className="mr-3 text-gray-400"/> My Orders
                           </button>
                           <button
-                            onClick={() => { setCurrentView('address'); setShowProfileMenu(false); }}
+                            onClick={() => { navigate('address'); setShowProfileMenu(false); }}
                             className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center border-b border-gray-50"
                           >
                             <MapPin size={16} className="mr-3 text-gray-400"/> Saved Address
@@ -734,7 +1226,7 @@ function App() {
                 )}
               </div>
 
-              <button onClick={() => setCurrentView('cart')} className="text-gray-600 hover:text-brand relative">
+              <button onClick={() => navigate('cart')} className="text-gray-600 hover:text-brand relative">
                 <ShoppingBag size={24} />
                 {cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
@@ -752,7 +1244,7 @@ function App() {
                value={searchQuery}
                onChange={(e) => {
                  setSearchQuery(e.target.value);
-                 if (e.target.value && currentView !== 'shop') setCurrentView('shop');
+                 if (e.target.value && currentView !== 'shop') navigate('shop');
                }}
                className="w-full bg-gray-100 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand focus:bg-white transition-all"
              />
@@ -766,18 +1258,20 @@ function App() {
         {currentView === 'home' && renderHome()}
         {currentView === 'shop' && renderShop()}
         {currentView === 'cart' && renderCart()}
+        {currentView === 'hospitals' && <HospitalsView onBack={() => navigate('home')}/>}
+        {currentView === 'appointments' && <AppointmentView onBack={() => navigate('home')} user={user} setIsLoading={setIsLoading}/>}
         {currentView === 'orders' && user && (
           <OrdersView 
             orders={orders.filter(o => o.customerName === user.name)} 
-            onBack={() => setCurrentView('home')} 
-            onStartShopping={() => setCurrentView('shop')}
+            onBack={() => navigate('home')} 
+            onStartShopping={() => navigate('shop')}
           />
         )}
         {currentView === 'address' && user && (
           <AddressView 
             user={user} 
-            onSave={handleSaveAddress} 
-            onBack={() => setCurrentView('home')} 
+            onSave={handleSaveAddressWithLoad} 
+            onBack={() => navigate('home')} 
           />
         )}
       </main>
@@ -814,10 +1308,10 @@ function App() {
           <div>
             <h4 className="text-white font-bold mb-4">Shop</h4>
             <ul className="space-y-2 text-sm">
-              <li><button onClick={() => { setActiveCategory('All'); setCurrentView('shop'); }} className="hover:text-brand">All Products</button></li>
-              <li><button onClick={() => { setActiveCategory('Skincare'); setCurrentView('shop'); }} className="hover:text-brand">Skincare</button></li>
-              <li><button onClick={() => { setActiveCategory('Pain Relief'); setCurrentView('shop'); }} className="hover:text-brand">Pain Relief</button></li>
-              <li><button onClick={() => { setActiveCategory('Weightloss'); setCurrentView('shop'); }} className="hover:text-brand">Weightloss</button></li>
+              <li><button onClick={() => { setActiveCategory('All'); navigate('shop'); }} className="hover:text-brand">All Products</button></li>
+              <li><button onClick={() => { setActiveCategory('Skincare'); navigate('shop'); }} className="hover:text-brand">Skincare</button></li>
+              <li><button onClick={() => { setActiveCategory('Pain Relief'); navigate('shop'); }} className="hover:text-brand">Pain Relief</button></li>
+              <li><button onClick={() => { setActiveCategory('Weightloss'); navigate('shop'); }} className="hover:text-brand">Weightloss</button></li>
             </ul>
           </div>
           
@@ -853,7 +1347,7 @@ function App() {
       <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-30 md:hidden pb-safe">
         <div className="flex justify-around items-center h-16">
           <button 
-            onClick={() => setCurrentView('home')}
+            onClick={() => navigate('home')}
             className={`flex flex-col items-center justify-center w-full h-full ${currentView === 'home' ? 'text-brand' : 'text-gray-400'}`}
           >
             <Home size={22} />
@@ -861,7 +1355,7 @@ function App() {
           </button>
           
           <button 
-            onClick={() => setCurrentView('shop')}
+            onClick={() => navigate('shop')}
             className={`flex flex-col items-center justify-center w-full h-full ${currentView === 'shop' ? 'text-brand' : 'text-gray-400'}`}
           >
             <Store size={22} />
@@ -869,13 +1363,13 @@ function App() {
           </button>
           
           <button 
-            onClick={() => setCurrentView('cart')}
+            onClick={() => navigate('cart')}
             className={`flex flex-col items-center justify-center w-full h-full relative ${currentView === 'cart' ? 'text-brand' : 'text-gray-400'}`}
           >
             <div className="relative">
               <ShoppingBag size={22} />
               {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
                   {cartItemCount}
                 </span>
               )}
@@ -889,7 +1383,7 @@ function App() {
                   const confirmLogout = window.confirm(`Logout ${user.name}?`);
                   if (confirmLogout) handleLogout();
                } else {
-                 setCurrentView('auth');
+                 navigate('auth');
                }
              }}
              className={`flex flex-col items-center justify-center w-full h-full ${user ? 'text-brand' : 'text-gray-400'}`}
