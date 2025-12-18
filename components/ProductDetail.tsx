@@ -34,11 +34,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   return (
     <div className="bg-white min-h-screen pb-20">
       {/* Header / Back Button */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center shadow-sm">
-        <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full transition-colors mr-2">
-          <ArrowLeft size={20} className="text-gray-700" />
+      <div className="sticky top-0 z-10 bg-blue-900 border-b border-blue-800 px-4 py-3 flex items-center shadow-sm">
+        <button onClick={onBack} className="p-2 hover:bg-blue-800 rounded-full transition-colors mr-2 text-white">
+          <ArrowLeft size={20} />
         </button>
-        <h1 className="text-lg font-bold text-gray-800 truncate">{product.name}</h1>
+        <h1 className="text-lg font-bold text-white truncate">{product.name}</h1>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">

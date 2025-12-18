@@ -1141,22 +1141,22 @@ function App() {
       )}
 
       {/* Sticky Header */}
-      <header className="sticky top-0 z-30 bg-white shadow-sm">
+      <header className="sticky top-0 z-30 bg-blue-900 shadow-sm transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-3">
                <button 
                  onClick={() => setIsMobileMenuOpen(true)}
-                 className="p-1 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                 className="p-1 rounded-lg text-white hover:bg-blue-800 transition-colors"
                >
                  <Menu size={28} />
                </button>
 
                <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('home')}>
-                  {/* Image Logo Only */}
+                  {/* Image Logo Only - Updated to match blue background */}
                   <div className="h-8 md:h-10">
                     <img 
-                      src="https://placehold.co/200x50/ffffff/15803d?text=GREEN+LEAF&font=playfair-display" 
+                      src="https://placehold.co/200x50/1e3a8a/ffffff?text=GREEN+LEAF&font=playfair-display" 
                       alt="Green Leaf Herbals" 
                       className="h-full object-contain"
                     />
@@ -1175,7 +1175,7 @@ function App() {
                       navigate('auth');
                     }
                   }}
-                  className={`flex items-center space-x-1 ${user ? 'text-brand' : 'text-gray-600 hover:text-brand'}`}
+                  className={`flex items-center space-x-1 ${user ? 'text-green-400' : 'text-gray-200 hover:text-white'}`}
                 >
                   <UserIcon size={24} />
                   {user && <span className="text-xs font-bold">{user.name}</span>}
@@ -1226,10 +1226,10 @@ function App() {
                 )}
               </div>
 
-              <button onClick={() => navigate('cart')} className="text-gray-600 hover:text-brand relative">
+              <button onClick={() => navigate('cart')} className="text-gray-200 hover:text-white relative">
                 <ShoppingBag size={24} />
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-blue-900">
                     {cartItemCount}
                   </span>
                 )}
@@ -1246,9 +1246,9 @@ function App() {
                  setSearchQuery(e.target.value);
                  if (e.target.value && currentView !== 'shop') navigate('shop');
                }}
-               className="w-full bg-gray-100 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-brand focus:bg-white transition-all"
+               className="peer w-full bg-blue-800 border-none rounded-lg py-2 pl-10 pr-4 text-sm text-white placeholder-blue-300 focus:ring-2 focus:ring-brand focus:bg-white focus:text-gray-900 focus:placeholder-gray-500 transition-all"
              />
-             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+             <Search className="absolute left-3 top-2.5 text-blue-300 peer-focus:text-gray-400 transition-colors" size={18} />
           </div>
         </div>
       </header>
